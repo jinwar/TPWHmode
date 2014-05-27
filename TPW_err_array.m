@@ -1,8 +1,7 @@
-function errs = TPW_err_array(para,localcs);
+function errs = TPW_err_array(parastr,localcs);
 
 setup_parameters;
 
-parastr = para2str(para,localcs);
 v1 = parastr.v1;
 phi1 = parastr.phi1;
 A1 = parastr.A1;
@@ -49,6 +48,6 @@ dphi_obs = localcs.dtps/T*2*pi;
 dphi_obs = wrapTo2Pi(dphi_obs);
 dph = (dphi_pre - dphi_obs)/2/pi;
 %dph = dph./sum(abs(dph));
-Wph = 5;
+Wph = 1;
 errs = [dA(:); dph(:)*Wph];
 

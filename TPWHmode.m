@@ -10,15 +10,27 @@ lalim = parameters.lalim;
 lolim = parameters.lolim;
 ip = 4;
 sample_range = parameters.maxstadist;
+center_stla = 9.3887;
+center_stlo = -144.88;
+v1_0 = 4.65;
+v2_0 = 4.95;
+r = 0.10;
+v1_0 = 4.65;
+v2_0 = 4.95;
 
-csmatfiles = dir(fullfile(CSmeasure,['*_cs_',parameters.component,'.mat']));
-for ie = 1:length(csmatfiles)
-	load CSmeasure/201202021334_cs_BHT.mat
-	center_sta = 12;
+csmatfiles = dir(fullfile('CSmeasure',['*_cs_',parameters.component,'.mat']));
+% First iteration, gather event information and invert event parameters
+%for ie = 1:length(csmatfiles)
+for ie = 1:5
+	filename = fullfile('CSmeasure',csmatfiles(ie).name)
+	load(filename);
 	evla = eventcs.evla;
 	evlo = eventcs.evlo;
 	stlas = eventcs.stlas;
 	stlos = eventcs.stlos;
+
+	stadists = distance(stlas,stlos,center_stla,center_stlo);
+	[temp center_sta] = min(stadists);
 
 	stadists = distance(stlas,stlos,stlas(center_sta),stlos(center_sta));
 	stadists = deg2km(stadists);
@@ -65,10 +77,10 @@ for ie = 1:length(csmatfiles)
 	center_lo = localcs.stlos(localcs.center_sta);
 	[epi_dist baz] = distance(center_la,center_lo,evla,evlo);
 
-	xnode = lalim(1):0.1:lalim(2);
-	ynode = lolim(1):0.1:lolim(2);
-	[t_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.dtps,xnode,ynode);
-	[amp_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.amps,xnode,ynode);
+%	xnode = lalim(1):0.1:lalim(2);
+%	ynode = lolim(1):0.1:lolim(2);
+%	[t_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.dtps,xnode,ynode);
+%	[amp_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.amps,xnode,ynode);
 	%figure(37)
 	%clf
 	%subplot(1,2,1)
@@ -93,10 +105,10 @@ for ie = 1:length(csmatfiles)
 	%plot(localcs.dists,localcs.amps,'x')
 	%title('amplitude');
 
-	v1 = 4.65;
+	v1 = v1_0;
 	phi1 = 0;
 	A1 = (max(localcs.amps)+min(localcs.amps))/2;
-	v2 = 4.95;
+	v2 = v2_0;
 	phi2 = 0;
 	A2 = (max(localcs.amps)-min(localcs.amps))/2;
 	theta1 = baz+180;
@@ -121,7 +133,6 @@ for ie = 1:length(csmatfiles)
 	%phi2 = phi_array(find(errmat == min(errmat)));
 
 	parastr0 = para2str(para0,localcs);
-	r = 0.05;
 	parastrL.v1 = v1*(1-r);
 	parastrL.phi1 = 0;
 	parastrL.A1 = 0;
@@ -145,12 +156,72 @@ for ie = 1:length(csmatfiles)
 	paraL = str2para(parastrL,paraN);
 	paraU = str2para(parastrU,paraN);
 	errs0 = TPW_err(para0,localcs);
-	%options = optimset('lsqnonlin');
-	%options.MaxFunEvals = 1000;
-	%options.PlotFcns = {'@optimplotfval'};
-	%[para,resnorm,residual]= lsqnonlin(@(para) TPW_err(para,localcs),para0,paraL,paraU,options);
 	[para,residual,exitflag,output] = simulannealbnd(@(para) TPW_err(para,localcs),para0,paraL,paraU);
 	TPW_comp(para,localcs);
-	parastr = para2str(para,localcs)
-	residual
+	event_parastr(ie) = para2str(para,localcs);
+	localcs.parastr = para2str(para,localcs);
+	localcs.initmod.parastr0 = parastr0;
+	localcs.initmod.parastrU = parastrU;
+	localcs.initmod.parastrL = parastrL;
+	localcs.residual = residual;
+	event_data(ie) = localcs;
 end
+% invert phase velocity for the first time.
+para0 = [event_parastr(1).v1 event_parastr(1).v2];
+vel_para = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
+disp(vel_para);
+% iteratively invert phase velocity and event parameters
+for iter = 1:2
+	% invert the event parameters
+	for ie=1:length(event_data)
+		% reset initial models
+		event_data(ie).v1 = vel_para(1);
+		event_data(ie).v2 = vel_para(2);
+		parastr0 = event_data(ie).initmod.parastr0;
+		parastrU = event_data(ie).initmod.parastrU;
+		parastrL = event_data(ie).initmod.parastrL;
+		parastr0 = event_parastr(ie);
+		parastr0.v1 = vel_para(1);
+		parastr0.v2 = vel_para(2);
+		parastrU.v1 = parastr0.v1*(1+r);
+		parastrU.v2 = parastr0.v2*(1+r);
+		parastrL.v1 = parastr0.v1*(1-r);
+		parastrL.v2 = parastr0.v2*(1-r);
+		% invert event parameters
+		paraN = 3;
+		para0 = str2para(parastr0,paraN);
+		paraL = str2para(parastrL,paraN);
+		paraU = str2para(parastrU,paraN);
+		[para,residual,exitflag,output] = simulannealbnd(@(para) TPW_err(para,event_data(ie)),para0,paraL,paraU);
+		event_parastr(ie) = para2str(para,event_data(ie));
+		event_data(ie).parastr = para2str(para,event_data(ie));
+		event_data(ie).initmod.parastr0 = parastr0;
+		event_data(ie).initmod.parastrU = parastrU;
+		event_data(ie).initmod.parastrL = parastrL;
+		event_data(ie).residual = residual;
+		TPW_comp(para,event_data(ie));
+	end
+	% invert the velocity
+	para0 = [event_parastr(1).v1 event_parastr(2).v2];
+	[vel_para,resnorm,residual] = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
+	disp(vel_para);
+end
+
+vel_array = linspace(4.5,5.5,20);
+for i=1:length(vel_array)
+	for j=1:length(vel_array)
+		vel_para(1) = vel_array(i);
+		vel_para(2) = vel_array(j);
+		errs = TPW_vel_err(vel_para,event_parastr,event_data);
+		err_mat(i,j) = sum(errs.^2);
+		v1_mat(i,j) = vel_array(i);
+		v2_mat(i,j) = vel_array(j);
+	end
+end
+figure(58)
+clf
+surface(v1_mat,v2_mat,err_mat);
+shading flat
+colorbar
+caxis([0 5])
+

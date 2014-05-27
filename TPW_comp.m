@@ -57,12 +57,13 @@ subplot(1,2,1)
 hold on
 plot(localcs.dists,dphi_obs,'x')
 plot(localcs.dists,dphi_pre,'ro')
-title('phase')
+title(['Phase, v1:',num2str(v1),', v2:',num2str(v2)]);
 subplot(1,2,2)
 hold on
 plot(localcs.dists,localcs.amps,'x')
 plot(localcs.dists,A_pre,'ro')
-title('amplitude')
+title(['Amplitude, A1:',num2str(A1),', A2:',num2str(A2)]);
+drawnow
 figure(29)
 clf
 subplot(1,2,2)
@@ -73,3 +74,4 @@ subplot(1,2,1)
 hold on
 plot(localcs.dists,dph,'rx')
 title('phase')
+drawnow
