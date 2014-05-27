@@ -168,8 +168,13 @@ for ie = 1:5
 end
 % invert phase velocity for the first time.
 para0 = [event_parastr(1).v1 event_parastr(1).v2];
+for ie=1:length(event_data)
+	para = str2para(event_parastr(ie),paraN);
+	para0 = [para0(:);para(:)];
+end
 vel_para = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
 disp(vel_para);
+pause
 % iteratively invert phase velocity and event parameters
 for iter = 1:2
 	% invert the event parameters
