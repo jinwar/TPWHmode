@@ -8,20 +8,20 @@ clear;
 setup_parameters;
 lalim = parameters.lalim;
 lolim = parameters.lolim;
-ip = 4;
+ip = 7;
 sample_range = parameters.maxstadist;
 center_stla = 9.3887;
 center_stlo = -144.88;
-v1_0 = 4.65;
-v2_0 = 4.95;
+v1_0 = 4.7;
+v2_0 = 5.57;
 r = 0.10;
-v1_0 = 4.65;
-v2_0 = 4.95;
+v1_0 = 4.50;
+v2_0 = 5.47;
 
 csmatfiles = dir(fullfile('CSmeasure',['*_cs_',parameters.component,'.mat']));
 % First iteration, gather event information and invert event parameters
-%for ie = 1:length(csmatfiles)
-for ie = 1:5
+for ie = 1:length(csmatfiles)
+%for ie = 1:5
 	filename = fullfile('CSmeasure',csmatfiles(ie).name)
 	load(filename);
 	evla = eventcs.evla;
@@ -168,6 +168,7 @@ for ie = 1:5
 end
 % invert phase velocity for the first time.
 para0 = [event_parastr(1).v1 event_parastr(1).v2];
+%para0 = event_parastr(1).v1;
 vel_para = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
 disp(vel_para);
 % iteratively invert phase velocity and event parameters
@@ -176,13 +177,17 @@ for iter = 1:2
 	for ie=1:length(event_data)
 		% reset initial models
 		event_data(ie).v1 = vel_para(1);
-		event_data(ie).v2 = vel_para(2);
+		if length(vel_para) > 1
+			event_data(ie).v2 = vel_para(2);
+		end
 		parastr0 = event_data(ie).initmod.parastr0;
 		parastrU = event_data(ie).initmod.parastrU;
 		parastrL = event_data(ie).initmod.parastrL;
 		parastr0 = event_parastr(ie);
 		parastr0.v1 = vel_para(1);
-		parastr0.v2 = vel_para(2);
+		if length(vel_para) > 1
+			parastr0.v2 = vel_para(2);
+		end
 		parastrU.v1 = parastr0.v1*(1+r);
 		parastrU.v2 = parastr0.v2*(1+r);
 		parastrL.v1 = parastr0.v1*(1-r);
@@ -202,12 +207,13 @@ for iter = 1:2
 		TPW_comp(para,event_data(ie));
 	end
 	% invert the velocity
-	para0 = [event_parastr(1).v1 event_parastr(2).v2];
+%	para0 = [event_parastr(1).v1 event_parastr(2).v2];
+	para0 = event_parastr(1).v1;
 	[vel_para,resnorm,residual] = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
 	disp(vel_para);
 end
 
-vel_array = linspace(4.5,5.5,20);
+vel_array = linspace(4.5,6.5,20);
 for i=1:length(vel_array)
 	for j=1:length(vel_array)
 		vel_para(1) = vel_array(i);

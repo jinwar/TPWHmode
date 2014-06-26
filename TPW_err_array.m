@@ -47,7 +47,9 @@ dphi_pre = wrapTo2Pi(dphi_pre);
 dphi_obs = localcs.dtps/T*2*pi;
 dphi_obs = wrapTo2Pi(dphi_obs);
 dph = (dphi_pre - dphi_obs)/2/pi;
+dph = wrapTo2Pi(dph);
+if dph > pi; dph = dph - 2*pi; end
 %dph = dph./sum(abs(dph));
-Wph = 1;
+Wph = 5;
 errs = [dA(:); dph(:)*Wph];
 

@@ -5,7 +5,9 @@ errs_all = [];
 
 for ie = 1:length(event_data)
 	event_parastr(ie).v1 = para(1);
-	event_parastr(ie).v2 = para(2);
+	if length(para)>1
+		event_parastr(ie).v2 = para(2);
+	end
 	errs = TPW_err_array(event_parastr(ie),event_data(ie));
 	errs_all = [errs_all(:); errs(:)];
 end

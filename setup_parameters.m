@@ -2,7 +2,7 @@
 
 % Global settings
 parameters.proj_name = 'SY';
-parameters.component = 'BHT';   % determined by filenames
+parameters.component = 'LHT';   % determined by filenames
 parameters.lalim=[6 12];
 parameters.lolim=[-149 -142];
 parameters.gridsize= 1.0;	  % in degrees

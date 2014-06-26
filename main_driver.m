@@ -5,10 +5,10 @@
 % download data use SOD
 % run sac rotation
 % change sac database to mat
-%sac2eventmat
+sac2eventmat
 
 % download the data using 
-data_download
+%data_download
 
 % clean up multiple or close events
 cleanup_events
