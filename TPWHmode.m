@@ -12,7 +12,7 @@ test_r = 0.03;
 test_N = 5;
 Wph = 30;
 
-for ip=[6]
+for ip=[1:8]
 
 setup_parameters;
 lalim = parameters.lalim;
@@ -140,7 +140,7 @@ event_errs = [event_data.err];
 ind = find(event_errs > median(event_errs)+std(event_errs));
 disp(['Initial model error:',num2str(TPW_vel_err(v1,v2,event_data))]);
 for ie=1:length(ind)
-	disp(['delete large err event: ',event_data(ind(ie)).id]);
+	disp(['Found large err event: ',event_data(ind(ie)).id]);
 end
 %event_data(ind) = [];
 

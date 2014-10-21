@@ -6,7 +6,7 @@ function event_data_out = correct_amp_azi(event_data)
 % written by Ge Jin, jinwar@gmail.com
 
 isfigure = 0;
-is_corr_phase = 1;
+is_corr_phase = 0;
 
 
 event_data_out = event_data;
