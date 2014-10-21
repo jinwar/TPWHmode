@@ -20,13 +20,13 @@ run_autowinpick
 gsdfmain
 
 % calculating eikonal tomography for each event
-eikonal_eq
+%eikonal_eq
 
 % stacking the result
-stack_phv
+%stack_phv
 
 % apply amplitude correction
-helmholtz_eq
+%helmholtz_eq
 
 % stack the result of helmholtz
-stack_helm
+%stack_helm

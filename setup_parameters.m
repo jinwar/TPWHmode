@@ -32,16 +32,16 @@ parameters.minstadist = 5;
 parameters.maxstadist = 400;   % station cross-correlation distance in km
 parameters.periods = sort(parameters.periods);  % make sure periods are ascending
 parameters.refv = 4;   % to select the correct cycle
-parameters.refphv = ones(size(parameters.periods))*4;
+parameters.refphv = ones(size(parameters.periods))*4.7;
 parameters.min_width = 0.06;  % to build up gaussian filters
 parameters.max_width = 0.10;  
 parameters.wintaperlength = 30;   % taper to build up the isolation filter
 parameters.prefilter = [10,200];
-parameters.xcor_win_halflength = 100;  % window for the cross-correlation
-parameters.xcor_win_iter = [0 0 0 1 1 1 1 1]; % re-apply the xcor window due to measured group delay, should be same length as periods
+parameters.xcor_win_halflength = 200;  % window for the cross-correlation
+parameters.xcor_win_iter = [0 0 0 0 0 0 0 0]; % re-apply the xcor window due to measured group delay, should be same length as periods
 parameters.Nfit = 2;
 parameters.Ncircle = 5;
-parameters.cohere_tol = 0.5; % minimum coherenecy between two stations
+parameters.cohere_tol = 0.6; % minimum coherenecy between two stations
 parameters.tp_tol = 10;  % seconds away from averaged phase velocity 
 
 % parameters for the tomography

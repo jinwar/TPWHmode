@@ -5,21 +5,33 @@
 
 clear;
 
+load pa5mod
+
+isfakedata = 0;
+test_r = 0.03;
+test_N = 5;
+Wph = 30;
+
+for ip=[6]
+
 setup_parameters;
 lalim = parameters.lalim;
 lolim = parameters.lolim;
-ip = 7;
 sample_range = parameters.maxstadist;
 center_stla = 9.3887;
 center_stlo = -144.88;
-v1_0 = 4.7;
-v2_0 = 5.57;
-r = 0.10;
-v1_0 = 4.50;
-v2_0 = 5.47;
+periods = parameters.periods;
+min_cs_num = 7;
+
+v1_0 = interp1(pa5mod.T_first,pa5mod.phv_first,periods(ip));
+v2_0 = interp1(pa5mod.T_fund,pa5mod.phv_fund,periods(ip));
+
 
 csmatfiles = dir(fullfile('CSmeasure',['*_cs_',parameters.component,'.mat']));
-% First iteration, gather event information and invert event parameters
+
+% Gather event information 
+clear event_data event_parastr
+event_num = 0;
 for ie = 1:length(csmatfiles)
 %for ie = 1:5
 	filename = fullfile('CSmeasure',csmatfiles(ie).name)
@@ -42,11 +54,14 @@ for ie = 1:length(csmatfiles)
 	localcs = [];
 	localcs.stlas = stlas(nbstaids);
 	localcs.stlos = stlos(nbstaids);
-	localcs.dists = deg2km(distance(localcs.stlas,localcs.stlos,evla,evlo));
+	for ista = 1:length(localcs.stlas)
+		localcs.dists(ista) = vdist(localcs.stlas(ista),localcs.stlos(ista),evla,evlo)/1e3;
+	end
 	localcs.evla = evla;
 	localcs.evlo = evlo;
 	localcs.center_sta = find(nbstaids == center_sta);
 	localcs.period = parameters.periods(ip);
+	localcs.id = eventcs.eventmatfile;
 	for ista = 1:length(nbstaids)
 		localcs.amps(ista) = eventcs.autocor(nbstaids(ista)).amp(ip)^0.5;
 		localcs.dtps(ista) = 0;
@@ -54,7 +69,8 @@ for ie = 1:length(csmatfiles)
 	end
 	localcs.isgood(localcs.center_sta) = 1;
 	% normalize the amplitude
-	normamp = localcs.amps(localcs.center_sta);
+%	normamp = localcs.amps(localcs.center_sta);
+	normamp = median(localcs.amps);
 	for ista = 1:length(nbstaids)
 		localcs.amps(ista) = localcs.amps(ista)./normamp;
 	end
@@ -65,169 +81,126 @@ for ie = 1:length(csmatfiles)
 			staid = find(nbstaids==eventcs.CS(ics).sta2);
 			localcs.dtps(staid) = -eventcs.CS(ics).dtp(ip);
 			localcs.isgood(staid) = eventcs.CS(ics).isgood(ip);
+			localcs.cohere(staid) = eventcs.CS(ics).cohere(ip);
 		elseif eventcs.CS(ics).sta2==center_sta 
 			staid = find(nbstaids==eventcs.CS(ics).sta1);
 			localcs.dtps(staid) = eventcs.CS(ics).dtp(ip);
 			localcs.isgood(staid) = eventcs.CS(ics).isgood(ip);
+			localcs.cohere(staid) = eventcs.CS(ics).cohere(ip);
 		end
 	end % ics
-
-	% define the initial model
-	center_la = localcs.stlas(localcs.center_sta);
-	center_lo = localcs.stlos(localcs.center_sta);
-	[epi_dist baz] = distance(center_la,center_lo,evla,evlo);
-
-%	xnode = lalim(1):0.1:lalim(2);
-%	ynode = lolim(1):0.1:lolim(2);
-%	[t_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.dtps,xnode,ynode);
-%	[amp_surf xi yi] = gridfit(localcs.stlas,localcs.stlos,localcs.amps,xnode,ynode);
-	%figure(37)
-	%clf
-	%subplot(1,2,1)
-	%worldmap(lalim,lolim);
-	%surfacem(xi,yi,t_surf);
-	%colorbar('southoutside');
-	%plotm(localcs.stlas,localcs.stlos,'kv');
-	%title('Travel time');
-	%subplot(1,2,2)
-	%worldmap(lalim,lolim);
-	%surfacem(xi,yi,amp_surf);
-	%colorbar('southoutside');
-	%plotm(localcs.stlas,localcs.stlos,'kv');
-	%title('amplitude');
-
-	%figure(38)
-	%clf
-	%subplot(1,2,1)
-	%plot(localcs.dists,localcs.dtps,'x')
-	%title('Travel time');
-	%subplot(1,2,2)
-	%plot(localcs.dists,localcs.amps,'x')
-	%title('amplitude');
-
-	v1 = v1_0;
-	phi1 = 0;
-	A1 = (max(localcs.amps)+min(localcs.amps))/2;
-	v2 = v2_0;
-	phi2 = 0;
-	A2 = (max(localcs.amps)-min(localcs.amps))/2;
-	theta1 = baz+180;
-	theta2 = baz+180;
-	para0 = [v1 A1 phi1 v2 phi2 A2 theta1 theta2];
-
-	localcs.v1 = v1;
-	localcs.v2 = v2;
-	%N = 100;
-	%phi_array = linspace(0,2*pi,N);
-	%for iy = 1:N
-	%	phi2 = phi_array(iy);
-	%	para0 = [v1 A1 v2 phi2 A2 theta1 theta2];
-	%	errs = TPW_err(para0,localcs);
-	%	errmat(iy) = sum(errs.^2);
-	%end
-	%%figure(58)
-	%%clf
-	%%plot(phi_array,errmat)
-	%%pause
-	%
-	%phi2 = phi_array(find(errmat == min(errmat)));
-
-	parastr0 = para2str(para0,localcs);
-	parastrL.v1 = v1*(1-r);
-	parastrL.phi1 = 0;
-	parastrL.A1 = 0;
-	parastrL.v2 = v2*(1-r);
-	parastrL.phi2 = 0;
-	parastrL.A2 = 0;
-	parastrL.theta1 = theta1-10;
-	parastrL.theta2 = theta2-10;
-
-	parastrU.v1 = v1*(1+r);
-	parastrU.phi1 = 2*pi;
-	parastrU.A1 = max(localcs.amps);
-	parastrU.v2 = v2*(1+r);
-	parastrU.phi2 = 2*pi;
-	parastrU.A2 = max(localcs.amps);
-	parastrU.theta1 = theta1+10;
-	parastrU.theta2 = theta2+10;
-
-	paraN = 3;
-	para0 = str2para(parastr0,paraN);
-	paraL = str2para(parastrL,paraN);
-	paraU = str2para(parastrU,paraN);
-	errs0 = TPW_err(para0,localcs);
-	[para,residual,exitflag,output] = simulannealbnd(@(para) TPW_err(para,localcs),para0,paraL,paraU);
-	TPW_comp(para,localcs);
-	event_parastr(ie) = para2str(para,localcs);
-	localcs.parastr = para2str(para,localcs);
-	localcs.initmod.parastr0 = parastr0;
-	localcs.initmod.parastrU = parastrU;
-	localcs.initmod.parastrL = parastrL;
-	localcs.residual = residual;
+	ind = find(localcs.isgood<0);
+	localcs.stlas(ind) = [];
+	localcs.stlos(ind) = [];
+	localcs.dists(ind) = [];
+	localcs.amps(ind) = [];
+	localcs.dtps(ind) = [];
+	localcs.isgood(ind) = [];
+	localcs.cohere(ind) = [];
+	localcs.id = eventcs.id;
+	stadists = distance(localcs.stlas,localcs.stlos,center_stla,center_stlo);
+	[temp center_sta] = min(stadists);
+	localcs.center_sta = center_sta;
+    localcs.azi = azimuth(center_stla,center_stlo,evla,evlo)+180;
+	para = polyfit(localcs.dtps,localcs.dists,1);
+	localcs.OPW_v = para(1);
+	localcs.amps = localcs.amps(:);
+	localcs.dtps = localcs.dtps(:);
+	localcs.dists = localcs.dists(:);
+	ddists = localcs.dists - localcs.dists(center_sta);
+	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),localcs.OPW_v);
+	localcs.Wph = Wph;
 	event_data(ie) = localcs;
 end
-% invert phase velocity for the first time.
-para0 = [event_parastr(1).v1 event_parastr(1).v2];
-%para0 = event_parastr(1).v1;
-vel_para = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
-disp(vel_para);
-% iteratively invert phase velocity and event parameters
-for iter = 1:2
-	% invert the event parameters
-	for ie=1:length(event_data)
-		% reset initial models
-		event_data(ie).v1 = vel_para(1);
-		if length(vel_para) > 1
-			event_data(ie).v2 = vel_para(2);
-		end
-		parastr0 = event_data(ie).initmod.parastr0;
-		parastrU = event_data(ie).initmod.parastrU;
-		parastrL = event_data(ie).initmod.parastrL;
-		parastr0 = event_parastr(ie);
-		parastr0.v1 = vel_para(1);
-		if length(vel_para) > 1
-			parastr0.v2 = vel_para(2);
-		end
-		parastrU.v1 = parastr0.v1*(1+r);
-		parastrU.v2 = parastr0.v2*(1+r);
-		parastrL.v1 = parastr0.v1*(1-r);
-		parastrL.v2 = parastr0.v2*(1-r);
-		% invert event parameters
-		paraN = 3;
-		para0 = str2para(parastr0,paraN);
-		paraL = str2para(parastrL,paraN);
-		paraU = str2para(parastrU,paraN);
-		[para,residual,exitflag,output] = simulannealbnd(@(para) TPW_err(para,event_data(ie)),para0,paraL,paraU);
-		event_parastr(ie) = para2str(para,event_data(ie));
-		event_data(ie).parastr = para2str(para,event_data(ie));
-		event_data(ie).initmod.parastr0 = parastr0;
-		event_data(ie).initmod.parastrU = parastrU;
-		event_data(ie).initmod.parastrL = parastrL;
-		event_data(ie).residual = residual;
-		TPW_comp(para,event_data(ie));
-	end
-	% invert the velocity
-%	para0 = [event_parastr(1).v1 event_parastr(2).v2];
-	para0 = event_parastr(1).v1;
-	[vel_para,resnorm,residual] = lsqnonlin(@(para) TPW_vel_err(para,event_parastr,event_data),para0);
-	disp(vel_para);
+
+%%% check bad events
+% remove events with too few cs measurements
+for ie=1:length(event_data)
+	csnum(ie) = length(event_data(ie).isgood);
+end
+ind = find(csnum < min_cs_num);
+for ie=1:length(ind)
+	disp(['delete event: ',event_data(ind(ie)).id,' for too few cs']);
+end
+event_data(ind) = [];
+
+% correct for azimuthal variation of amplitude due to radiation pattern
+event_data = correct_amp_azi(event_data);
+
+% remove events with large errors
+v1 = v1_0;
+v2 = v2_0;
+event_parastr = fit_event_para(v1,v2,event_data);
+for ie=1:length(event_data)
+	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
+	event_data(ie).err = sum(errs.^2)./length(event_data(ie).stlas);
+%	pause
+end
+event_errs = [event_data.err];
+ind = find(event_errs > median(event_errs)+std(event_errs));
+disp(['Initial model error:',num2str(TPW_vel_err(v1,v2,event_data))]);
+for ie=1:length(ind)
+	disp(['delete large err event: ',event_data(ind(ie)).id]);
+end
+%event_data(ind) = [];
+
+
+% fake Two plane wave measurement
+if isfakedata
+	event_data = fake_TPW_measure(v1_0,v2_0,event_data);
 end
 
-vel_array = linspace(4.5,6.5,20);
-for i=1:length(vel_array)
-	for j=1:length(vel_array)
-		vel_para(1) = vel_array(i);
-		vel_para(2) = vel_array(j);
-		errs = TPW_vel_err(vel_para,event_parastr,event_data);
-		err_mat(i,j) = sum(errs.^2);
-		v1_mat(i,j) = vel_array(i);
-		v2_mat(i,j) = vel_array(j);
+% grid search through velocity space
+
+v1 = v1_0;
+v2 = v2_0;
+
+v1_array = linspace(v1*(1-test_r),v1*(1+test_r),test_N);
+v2_array = linspace(v2*(1-test_r),v2*(1+test_r),test_N);
+
+for iv1 = 1:length(v1_array)
+	for iv2 = 1:length(v2_array)
+		v1 = v1_array(iv1);
+		v2 = v2_array(iv2);
+		if v1<v2
+			errmat(iv1,iv2) = NaN;
+			continue;
+		end
+		errmat(iv1,iv2) = TPW_vel_err(v1,v2,event_data);
+		disp(sprintf('v1: %f, v2: %f: %f',v1,v2,errmat(iv1,iv2)));
 	end
 end
-figure(58)
+			
+figure(39)
 clf
-surface(v1_mat,v2_mat,err_mat);
-shading flat
+[xi yi] = ndgrid(v1_array,v2_array);
+surface(xi,yi,errmat);
+xlim([v1_array(1) v1_array(end)]);
+ylim([v2_array(1) v2_array(end)]);
 colorbar
-caxis([0 5])
+caxis([nanmin(errmat(:)) nanmedian(errmat(find(errmat<nanmedian(errmat(:)))))]);
 
+ind = find(errmat==min(errmat(:)));
+disp(sprintf('%f %f',xi(ind),yi(ind)));
+stemp = sprintf('v1: %f v2: %f, v10: %f v2_0 %f',xi(ind),yi(ind),v1_0,v2_0);
+title(stemp)
+save2pdf(['errmat_',num2str(ip),'.pdf'],gcf,100);
+
+v1 = xi(ind); v2=yi(ind);
+
+v1=v1_0;
+v2=v2_0;
+
+TPW_vel_err(v1,v2,event_data)
+
+event_parastr = fit_event_para(v1,v2,event_data);
+for ie=1:length(event_data)
+	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
+	event_data(ie).err = sum(errs.^2);
+%%	pause
+end
+
+filename = ['workspace_ip_',num2str(ip)];
+save(filename);
+
+end   %loop of ip
