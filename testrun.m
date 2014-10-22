@@ -1,5 +1,32 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% exam the spectrum of modes
+%
+rehash;
+eventfile = '201208270437_LHT.mat';
+eventfile = '201209051442_LHT.mat';
+fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
+first = load(fullfile('../fake_sta_11/eventmat',eventfile));
+mix = load(fullfile('../fake_sta_01/eventmat',eventfile));
+
+frange = [0.018 0.022];
+staid = 9;
+plot_spectrum(fund.event.stadata(staid).data,1,frange,1);
+title('fund')
+plot_spectrum(first.event.stadata(staid).data,1,frange,2);
+title('first')
+plot_spectrum(mix.event.stadata(staid).data,1,frange,3);
+title('mix')
+%plot_spectrum(first.event.stadata(staid).data+fund.event.stadata(staid).data,1,frange,4);
+%title('fund+first')
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Exam the relation between A and OPW_v
 %
 if 0
 for ie=1:length(event_data)
@@ -15,7 +42,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot the comparison between initial model and final model
-if 1
+if 0
 
 v1 = v1_0; v2=v2_0;
 event_parastr_0 = fit_event_para(v1,v2,event_data);

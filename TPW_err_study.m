@@ -1,7 +1,7 @@
 
 clear;
 
-ip = 6;
+ip = 4;
 
 filename = ['workspace_ip_',num2str(ip),'.mat'];
 load(filename);
@@ -34,7 +34,7 @@ for ie = 1:length(event_data)
 end
 
 disp(['init: ',num2str(sum(event_err_0)),' final: ',num2str(sum(event_err))]);
-ie = 6;
+ie = 4;
 
 errs = TPW_err_array(event_parastr(ie),event_data(ie),48); 
 errs = TPW_err_array(event_parastr_0(ie),event_data(ie),49); 

@@ -3,7 +3,7 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 %
 	setup_ErrorCode;
 	isdebug = 0;
-    isfigure = 0;
+    isfigure = 1;
 
 	refv = parameters.refv;
 	refphv = parameters.refphv;

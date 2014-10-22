@@ -8,12 +8,11 @@ clear;
 load pa5mod
 
 isfakedata = 0;
-is_azi_corr = 0;
 test_r = 0.03;
 test_N = 5;
 Wph = 30;
 
-for ip=[ 5 ]
+for ip=[1:8]
 
 setup_parameters;
 lalim = parameters.lalim;
@@ -66,7 +65,7 @@ for ie = 1:length(csmatfiles)
 	for ista = 1:length(nbstaids)
 		localcs.amps(ista) = eventcs.autocor(nbstaids(ista)).amp(ip)^0.5;
 		localcs.dtps(ista) = 0;
-		localcs.isgood(ista) = -1;
+		localcs.isgood(ista) = 0;
 	end
 	localcs.isgood(localcs.center_sta) = 1;
 	% normalize the amplitude
@@ -126,9 +125,7 @@ end
 event_data(ind) = [];
 
 % correct for azimuthal variation of amplitude due to radiation pattern
-if is_azi_corr
-	event_data = correct_amp_azi(event_data);
-end
+event_data = correct_amp_azi(event_data);
 
 % remove events with large errors
 v1 = v1_0;
@@ -136,19 +133,16 @@ v2 = v2_0;
 event_parastr = fit_event_para(v1,v2,event_data);
 for ie=1:length(event_data)
 	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
-	event_data(ie).err = sum(errs.^2);
+	event_data(ie).err = sum(errs.^2)./length(event_data(ie).stlas);
 %	pause
 end
 event_errs = [event_data.err];
 ind = find(event_errs > median(event_errs)+std(event_errs));
-disp(['Initial model event error:']);
-disp(num2str([event_data.err]));
+disp(['Initial model error:',num2str(TPW_vel_err(v1,v2,event_data))]);
 for ie=1:length(ind)
-	disp(['Found large err event: ',event_data(ind(ie)).id]);
+	disp(['delete large err event: ',event_data(ind(ie)).id]);
 end
-keyboard
-event_data(ind) = []; disp('removed');
-disp(['sum error after removal: ',num2str(sum([event_data.err]))]);
+%event_data(ind) = [];
 
 
 % fake Two plane wave measurement
@@ -164,23 +158,19 @@ v2 = v2_0;
 v1_array = linspace(v1*(1-test_r),v1*(1+test_r),test_N);
 v2_array = linspace(v2*(1-test_r),v2*(1+test_r),test_N);
 
-errmat_all = zeros(length(event_data),length(v1_array),length(v2_array));
-
 for iv1 = 1:length(v1_array)
 	for iv2 = 1:length(v2_array)
 		v1 = v1_array(iv1);
 		v2 = v2_array(iv2);
 		if v1<v2
-			errmat_all(:,iv1,iv2) = NaN;
-			errmat(iv1,iv2)=NaN;
+			errmat(iv1,iv2) = NaN;
 			continue;
 		end
-		errmat_all(:,iv1,iv2) = TPW_vel_err(v1,v2,event_data);
-		errmat(iv1,iv2) = sum(errmat_all(:,iv1,iv2));
-		disp(sprintf('v1: %f, v2: %f: %f',v1,v2,sum(errmat_all(:,iv1,iv2))));
+		errmat(iv1,iv2) = TPW_vel_err(v1,v2,event_data);
+		disp(sprintf('v1: %f, v2: %f: %f',v1,v2,errmat(iv1,iv2)));
 	end
 end
-
+			
 figure(39)
 clf
 [xi yi] = ndgrid(v1_array,v2_array);
@@ -195,20 +185,20 @@ disp(sprintf('%f %f',xi(ind),yi(ind)));
 stemp = sprintf('v1: %f v2: %f, v10: %f v2_0 %f',xi(ind),yi(ind),v1_0,v2_0);
 title(stemp)
 save2pdf(['errmat_',num2str(ip),'.pdf'],gcf,100);
-%
-%v1 = xi(ind); v2=yi(ind);
-%
-%v1=v1_0;
-%v2=v2_0;
-%
-%TPW_vel_err(v1,v2,event_data)
-%
-%event_parastr = fit_event_para(v1,v2,event_data);
-%for ie=1:length(event_data)
-%	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
-%	event_data(ie).err = sum(errs.^2);
-%%%	pause
-%end
+
+v1 = xi(ind); v2=yi(ind);
+
+v1=v1_0;
+v2=v2_0;
+
+TPW_vel_err(v1,v2,event_data)
+
+event_parastr = fit_event_para(v1,v2,event_data);
+for ie=1:length(event_data)
+	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
+	event_data(ie).err = sum(errs.^2);
+%%	pause
+end
 
 filename = ['workspace_ip_',num2str(ip)];
 save(filename);
