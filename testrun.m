@@ -1,16 +1,63 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% exam fundamental mode fft_phase problem
+%
+if 0
+ie=1;
+eventid = event_data(ie).id;
+eventfile = [eventid,'_LHT.mat'];
+fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
+
+for staid = 1:4
+frange = [1/periods(ip)*0.9 1/periods(ip)*1.1];
+plot_spectrum(fund.event.stadata(staid).data,1,frange,staid);
+end
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% exam why big error exist in the periods longer than 60s.
+%
+if 1
+	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
+eventid = event_data(ie).id;
+eventfile = [eventid,'_cs_LHT.mat'];
+fund = load(fullfile('../fake_sta_00/CSmeasure',eventfile));
+first = load(fullfile('../fake_sta_11/CSmeasure',eventfile));
+mix = load(fullfile('../fake_sta_01/CSmeasure',eventfile));
+ddists = event_data(ie).dists - event_data(ie).dists(event_data(ie).center_sta);
+
+for ista=9:13;
+i = sqrt(-1);
+fund_amp = fund.eventcs.autocor(ista).fft_amp(ip);
+fund_phase = fund.eventcs.autocor(ista).fft_phase(ip);
+first_amp = first.eventcs.autocor(ista).fft_amp(ip);
+first_phase = first.eventcs.autocor(ista).fft_phase(ip);
+mix_amp = mix.eventcs.autocor(ista).fft_amp(ip);
+mix_phase = mix.eventcs.autocor(ista).fft_phase(ip);
+add_wave = fund_amp*exp(i*fund_phase)+first_amp*exp(i*first_phase);
+disp(sprintf('sta %d, ddist %f',ista,ddists(ista)));
+disp(sprintf('fund: %f %f, first: %f %f',fund_amp,fund_phase,first_amp,first_phase));
+disp(sprintf('add: %f %f, mix: %f %f',abs(add_wave),angle(add_wave),mix_amp,mix_phase));
+end
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exam the spectrum of modes
 %
+if 0
 rehash;
-eventfile = '201208270437_LHT.mat';
-eventfile = '201209051442_LHT.mat';
+eventid = event_data(ie).id;
+eventfile = [eventid,'_LHT.mat'];
 fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
 first = load(fullfile('../fake_sta_11/eventmat',eventfile));
 mix = load(fullfile('../fake_sta_01/eventmat',eventfile));
 
-frange = [0.018 0.022];
 staid = 9;
+frange = [1/periods(ip)*0.9 1/periods(ip)*1.1];
 plot_spectrum(fund.event.stadata(staid).data,1,frange,1);
 title('fund')
 plot_spectrum(first.event.stadata(staid).data,1,frange,2);
@@ -20,6 +67,7 @@ title('mix')
 %plot_spectrum(first.event.stadata(staid).data+fund.event.stadata(staid).data,1,frange,4);
 %title('fund+first')
 
+end
 
 
 

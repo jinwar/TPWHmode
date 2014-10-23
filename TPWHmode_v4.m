@@ -13,7 +13,7 @@ test_r = 0.03;
 test_N = 5;
 Wph = 30;
 
-for ip=[ 6]
+for ip=[ 5 ]
 
 setup_parameters;
 lalim = parameters.lalim;
@@ -64,21 +64,14 @@ for ie = 1:length(csmatfiles)
 	localcs.period = parameters.periods(ip);
 	localcs.id = eventcs.eventmatfile;
 	for ista = 1:length(nbstaids)
-		localcs.amps(ista) = eventcs.autocor(nbstaids(ista)).fft_amp(ip);
-		localcs.phases(ista) = eventcs.autocor(nbstaids(ista)).fft_phase(ip);
+		localcs.amps(ista) = eventcs.autocor(nbstaids(ista)).amp(ip)^0.5;
 		localcs.dtps(ista) = 0;
 		localcs.isgood(ista) = -1;
 	end
 	localcs.isgood(localcs.center_sta) = 1;
-	% convert phase to dtp
-	dphases = localcs.phases - localcs.phases(localcs.center_sta);
-	localcs.dtps = -dphases/2/pi*periods(ip);
-	ddists = localcs.dists - localcs.dists(center_sta);
-	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),parameters.refphv(ip));
 	% normalize the amplitude
 %	normamp = localcs.amps(localcs.center_sta);
 	normamp = median(localcs.amps);
-	localcs.true_amps = localcs.amps;
 	for ista = 1:length(nbstaids)
 		localcs.amps(ista) = localcs.amps(ista)./normamp;
 	end
@@ -87,12 +80,12 @@ for ie = 1:length(csmatfiles)
 	for ics = 1:length(eventcs.CS)
 		if eventcs.CS(ics).sta1==center_sta 
 			staid = find(nbstaids==eventcs.CS(ics).sta2);
-%			localcs.dtps(staid) = -eventcs.CS(ics).dtp(ip);
+			localcs.dtps(staid) = -eventcs.CS(ics).dtp(ip);
 			localcs.isgood(staid) = eventcs.CS(ics).isgood(ip);
 			localcs.cohere(staid) = eventcs.CS(ics).cohere(ip);
 		elseif eventcs.CS(ics).sta2==center_sta 
 			staid = find(nbstaids==eventcs.CS(ics).sta1);
-%			localcs.dtps(staid) = eventcs.CS(ics).dtp(ip);
+			localcs.dtps(staid) = eventcs.CS(ics).dtp(ip);
 			localcs.isgood(staid) = eventcs.CS(ics).isgood(ip);
 			localcs.cohere(staid) = eventcs.CS(ics).cohere(ip);
 		end
@@ -115,6 +108,7 @@ for ie = 1:length(csmatfiles)
 	localcs.amps = localcs.amps(:);
 	localcs.dtps = localcs.dtps(:);
 	localcs.dists = localcs.dists(:);
+	ddists = localcs.dists - localcs.dists(center_sta);
 	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),localcs.OPW_v);
 	localcs.Wph = Wph;
 	event_data(ie) = localcs;
@@ -153,7 +147,7 @@ for ie=1:length(ind)
 	disp(['Found large err event: ',event_data(ind(ie)).id]);
 end
 keyboard
-%event_data(ind) = []; disp('removed');
+event_data(ind) = []; disp('removed');
 disp(['sum error after removal: ',num2str(sum([event_data.err]))]);
 
 

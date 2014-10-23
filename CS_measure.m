@@ -3,7 +3,7 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 %
 	setup_ErrorCode;
 	isdebug = 0;
-    isfigure = 1;
+    isfigure = 0;
 
 	refv = parameters.refv;
 	refphv = parameters.refphv;
@@ -87,6 +87,9 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 	winbgt = dist2/v1+t1;
 	winendt = dist2/v2+t2;
 	win_data2 = flat_hanning_win(taxis2,data2,winbgt,winendt,wintaperlength);
+	[fft_amp, fft_phase] = fft_measure(win_data2, dt2, periods);
+	CS.fft_amp = fft_amp;
+	CS.fft_phase = fft_phase;
 
 	% apply cross-correlation
 	[xcor,lag] = xcorr(data1,win_data2,...
