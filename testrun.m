@@ -20,7 +20,7 @@ end
 % exam why big error exist in the periods longer than 60s.
 %
 if 1
-	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
+%	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
 eventid = event_data(ie).id;
 eventfile = [eventid,'_cs_LHT.mat'];
 fund = load(fullfile('../fake_sta_00/CSmeasure',eventfile));
@@ -28,7 +28,7 @@ first = load(fullfile('../fake_sta_11/CSmeasure',eventfile));
 mix = load(fullfile('../fake_sta_01/CSmeasure',eventfile));
 ddists = event_data(ie).dists - event_data(ie).dists(event_data(ie).center_sta);
 
-for ista=9:13;
+for ista=7;
 i = sqrt(-1);
 fund_amp = fund.eventcs.autocor(ista).fft_amp(ip);
 fund_phase = fund.eventcs.autocor(ista).fft_phase(ip);
@@ -38,7 +38,7 @@ mix_amp = mix.eventcs.autocor(ista).fft_amp(ip);
 mix_phase = mix.eventcs.autocor(ista).fft_phase(ip);
 add_wave = fund_amp*exp(i*fund_phase)+first_amp*exp(i*first_phase);
 disp(sprintf('sta %d, ddist %f',ista,ddists(ista)));
-disp(sprintf('fund: %f %f, first: %f %f',fund_amp,fund_phase,first_amp,first_phase));
+disp(sprintf('fund: %f %f, first: %f %f, amp ratio: %f',fund_amp,fund_phase,first_amp,first_phase,first_amp./fund_amp));
 disp(sprintf('add: %f %f, mix: %f %f',abs(add_wave),angle(add_wave),mix_amp,mix_phase));
 end
 
@@ -96,6 +96,7 @@ v1 = v1_0; v2=v2_0;
 event_parastr_0 = fit_event_para(v1,v2,event_data);
 v1 = xi(ind); v2=yi(ind);
 event_parastr = fit_event_para(v1,v2,event_data);
+disp(sprintf('init: %f %f, final: %f %f',v1_0,v2_0,v1,v2));
 for ie = 1:length(event_data)
 	errs = TPW_err_array(event_parastr_0(ie),event_data(ie)); 
 	event_err_0(ie) = sum(errs.^2);

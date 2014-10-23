@@ -82,7 +82,7 @@ if isfigure
 		ori_phase_var = localcs.ori_dtps-ddists/v1;
 		plot(localcs.dists,ori_phase_var,'ro')
 	end
-	title(['OPW vel: ',num2str(1./para(1))]);
+	title(sprintf('V1: %f V2: %f',parastr.v1,parastr.v2));
 	subplot(1,3,3)
 	hold on
 	polyerrs = (polyval(para,localcs.dists)-localcs.dtps)/T*2*Wph;

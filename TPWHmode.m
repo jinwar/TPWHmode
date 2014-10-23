@@ -13,7 +13,7 @@ test_r = 0.03;
 test_N = 5;
 Wph = 30;
 
-for ip=[ 6]
+for ip=[ 7]
 
 setup_parameters;
 lalim = parameters.lalim;

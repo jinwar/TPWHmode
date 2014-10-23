@@ -11,7 +11,7 @@ for A2 = [0.5]
 end
 %w2_para0 = [0.25 pi];
 w2_paraL = [0 0];
-w2_paraU = [0.95 2*pi];
+w2_paraU = [0.95 4*pi];
 
 for ie=1:length(event_data)
 	event_data(ie).v1 = v1;
