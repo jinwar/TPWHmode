@@ -1,7 +1,7 @@
 
 clear;
 
-ip = 7;
+ip = 5;
 
 filename = ['workspace_ip_',num2str(ip),'.mat'];
 load(filename);
@@ -30,12 +30,13 @@ for ie = 1:length(event_data)
 	event_pherr(ie) = sum(errs(end/2+1:end).^2);
 	para = polyfit(event_data(ie).dists,event_data(ie).dtps,1);
 	polyerrs = polyval(para,event_data(ie).dists)-event_data(ie).dtps;
-	disp(sprintf('ie: %d, stanum: %d, init: %f final: %f , A2: %f',ie,length(event_data(ie).dtps),event_err_0(ie),event_err(ie),event_parastr_0(ie).A2));
+	diff_amp = max(event_data(ie).amps)/min(event_data(ie).amps);
+	disp(sprintf('ie: %d, stanum: %d, init: %f final: %f , deltaA: %f',ie,length(event_data(ie).dtps),event_err_0(ie),event_err(ie),diff_amp));
 end
 
 disp(['init: ',num2str(sum(event_err_0)),' final: ',num2str(sum(event_err))]);
 
-ie = 5;
+ie = 4;
 errs = TPW_err_array(event_parastr(ie),event_data(ie),48); 
 errs = TPW_err_array(event_parastr_0(ie),event_data(ie),49); 
 

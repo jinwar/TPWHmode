@@ -121,7 +121,9 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 	CS.win_cent_t = win_cent_t;
 	CS.ddist = dist1 - dist2;
 	% apply the window function
-	win_xcor = hanning_win(lag,xcor,win_cent_t,xcor_win_halflength*2);
+%	win_xcor = hanning_win(lag,xcor,win_cent_t,xcor_win_halflength*2);
+	win_xcor = flat_hanning_win(lag,xcor,win_cent_t-xcor_win_halflength,win_cent_t+xcor_win_halflength,round(xcor_win_halflength/2));
+	
 
 	if isfigure
 		figure(44)
@@ -178,7 +180,8 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 		if xcor_win_iter(ip)
 			% re-center the window
 			win_cent_t = CS.dtg(ip);
-			win_xcor = hanning_win(lag,xcor,win_cent_t,xcor_win_halflength*2);
+%			win_xcor = hanning_win(lag,xcor,win_cent_t,xcor_win_halflength*2);
+			win_xcor = flat_hanning_win(lag,xcor,win_cent_t-xcor_win_halflength,win_cent_t+xcor_win_halflength,round(xcor_win_halflength/2));
 			fft_win_xcor = fft(win_xcor);
 			if size(fft_win_xcor) == 1,fft_win_xcor = fft_win_xcor'; end
 			% narrow-band filter

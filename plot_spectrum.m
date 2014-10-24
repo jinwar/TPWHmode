@@ -1,4 +1,4 @@
-function plot_spectrum(data,delta,frange,fignum)
+function [fftdata faxis] = plot_spectrum(data,delta,frange,fignum)
 
 N = length(data);
 T = N*delta;
@@ -26,3 +26,4 @@ xlim(frange);
 subplot(1,2,2)
 plot(faxis,angle(fftdata),'o');
 xlim(frange);
+ylim([-pi pi])

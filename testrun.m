@@ -1,5 +1,79 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% exam the different between fft phase and cs dtps
+%
+if 1
+for ie=6
+ie
+figure(48)
+clf
+subplot(1,3,1)
+hold on
+plot(event_data(ie).dists,event_data(ie).cs_amps./median(event_data(ie).cs_amps),'o');
+plot(event_data(ie).dists,event_data(ie).true_amps./median(event_data(ie).true_amps),'x');
+subplot(1,3,2)
+hold on
+plot(event_data(ie).dists,event_data(ie).fft_dtps,'x');
+plot(event_data(ie).dists,event_data(ie).cs_dtps,'o');
+subplot(1,3,3)
+hold on
+diff_t =event_data(ie).cs_dtps(:) - event_data(ie).fft_dtps(:);
+plot(event_data(ie).dists,diff_t,'x');
+%pause
+
+end
+
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% exam the spectrum of modes
+%
+if 0
+rehash;
+eventid = event_data(ie).id;
+eventfile = [eventid,'_LHT.mat'];
+fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
+first = load(fullfile('../fake_sta_11/eventmat',eventfile));
+mix = load(fullfile('../fake_sta_01/eventmat',eventfile));
+
+frange = [1/periods(ip)*0.9 1/periods(ip)*1.1];
+%frange = [0.03 0.05]
+%plot_spectrum(fund.event.stadata(staid).data,1,frange,1);
+%title('fund')
+%plot_spectrum(first.event.stadata(staid).data,1,frange,2);
+%title('first')
+staid = 7;
+data1 = mix.event.stadata(staid).data;
+[fftdata1 faxis] = plot_spectrum(data1,1,frange,1);
+title(num2str(staid));
+staid = 12;
+data2 = mix.event.stadata(staid).data;
+[fftdata2 faxis] =plot_spectrum(data2,1,frange,2);
+title(num2str(staid));
+[fftxcor faxis_cor] = plot_spectrum(xcorr(data1,data2),1,frange,3);
+title('xcorr');
+figure(2)
+clf
+%plot(faxis,wrapToPi(angle(fftdata1)-angle(fftdata2)),'o');
+hold on
+plot(faxis_cor,angle(fftxcor),'o');
+xlim(frange);
+ylim([-pi pi]);
+plot(faxis,angle(fftdata1.*conj(fftdata2)),'ro');
+xlim(frange);
+ylim([-pi pi]);
+legend('xcor','phase minus');
+%plot_spectrum(first.event.stadata(staid).data+fund.event.stadata(staid).data,1,frange,4);
+%title('fund+first')
+
+end
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exam fundamental mode fft_phase problem
 %
 if 0
@@ -19,7 +93,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exam why big error exist in the periods longer than 60s.
 %
-if 1
+if 0
 %	errs = TPW_err_array(event_parastr(ie),event_data(ie),1); 
 eventid = event_data(ie).id;
 eventfile = [eventid,'_cs_LHT.mat'];
@@ -43,32 +117,6 @@ disp(sprintf('add: %f %f, mix: %f %f',abs(add_wave),angle(add_wave),mix_amp,mix_
 end
 
 end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% exam the spectrum of modes
-%
-if 0
-rehash;
-eventid = event_data(ie).id;
-eventfile = [eventid,'_LHT.mat'];
-fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
-first = load(fullfile('../fake_sta_11/eventmat',eventfile));
-mix = load(fullfile('../fake_sta_01/eventmat',eventfile));
-
-staid = 9;
-frange = [1/periods(ip)*0.9 1/periods(ip)*1.1];
-plot_spectrum(fund.event.stadata(staid).data,1,frange,1);
-title('fund')
-plot_spectrum(first.event.stadata(staid).data,1,frange,2);
-title('first')
-plot_spectrum(mix.event.stadata(staid).data,1,frange,3);
-title('mix')
-%plot_spectrum(first.event.stadata(staid).data+fund.event.stadata(staid).data,1,frange,4);
-%title('fund+first')
-
-end
-
 
 
 
