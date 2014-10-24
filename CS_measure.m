@@ -12,6 +12,7 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 	max_width = parameters.max_width;
 	wintaperlength = parameters.wintaperlength;
 	prefilter = parameters.prefilter;
+	is_prefilter = parameters.is_prefilter;
 	xcor_win_halflength = parameters.xcor_win_halflength;
 	Nfit = parameters.Nfit;
 	Ncircle = parameters.Ncircle;
@@ -42,8 +43,10 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 	dt1 = event.stadata(sta1).delta;
 	Nt = length(event.stadata(sta1).data);
 	fN = 1/2/dt1;
-	[b,a] = butter(2,[1/prefilter(2)/fN, 1/prefilter(1)/fN]);
-	data1 = filtfilt(b,a,data1);
+	[b,a] = butter(4,[1/prefilter(2)/fN, 1/prefilter(1)/fN]);
+	if is_prefilter
+		data1 = filtfilt(b,a,data1);
+	end
 	taxis1 = bgtime + [0:Nt-1]'*dt1;
 	dist1 = event.stadata(sta1).dist;
 	winbgt = dist1/v1+t1;
@@ -60,7 +63,9 @@ function CS = CS_measure(event,sta1,sta2,parameters)
 	Nt = length(event.stadata(sta2).data);
 	fN = 1/2/dt2;
 	[b,a] = butter(2,[1/prefilter(2)/fN, 1/prefilter(1)/fN]);
-	data2 = filtfilt(b,a,data2);
+	if is_prefilter
+		data2 = filtfilt(b,a,data2);
+	end
 	taxis2 = bgtime + [0:Nt-1]'*dt2;
 	dist2 = event.stadata(sta2).dist;
 	winbgt = dist2/v1+t1;

@@ -3,14 +3,14 @@
 % exam the different between fft phase and cs dtps
 %
 if 1
-for ie=6
+ie=4
 ie
 figure(48)
 clf
 subplot(1,3,1)
 hold on
 plot(event_data(ie).dists,event_data(ie).cs_amps./median(event_data(ie).cs_amps),'o');
-plot(event_data(ie).dists,event_data(ie).true_amps./median(event_data(ie).true_amps),'x');
+plot(event_data(ie).dists,event_data(ie).fft_amps./median(event_data(ie).fft_amps),'x');
 subplot(1,3,2)
 hold on
 plot(event_data(ie).dists,event_data(ie).fft_dtps,'x');
@@ -24,14 +24,12 @@ plot(event_data(ie).dists,diff_t,'x');
 end
 
 
-end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % exam the spectrum of modes
 %
-if 0
-rehash;
+if 1
 eventid = event_data(ie).id;
 eventfile = [eventid,'_LHT.mat'];
 fund = load(fullfile('../fake_sta_00/eventmat',eventfile));
@@ -54,7 +52,7 @@ data2 = mix.event.stadata(staid).data;
 title(num2str(staid));
 [fftxcor faxis_cor] = plot_spectrum(xcorr(data1,data2),1,frange,3);
 title('xcorr');
-figure(2)
+figure(4)
 clf
 %plot(faxis,wrapToPi(angle(fftdata1)-angle(fftdata2)),'o');
 hold on

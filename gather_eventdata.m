@@ -1,10 +1,11 @@
-function event_data = gather_eventdata(center_stla,center_stlo,ip)
+function event_data = gather_eventdata(center_stla,center_stlo,ip,Wph)
 
 setup_parameters;
 lalim = parameters.lalim;
 lolim = parameters.lolim;
 sample_range = parameters.maxstadist;
 periods = parameters.periods;
+is_cs_dtp = 1;
 	
 csmatfiles = dir(fullfile('CSmeasure',['*_cs_',parameters.component,'.mat']));
 
@@ -54,13 +55,7 @@ for ie = 1:length(csmatfiles)
 	ddists = localcs.dists - localcs.dists(center_sta);
 	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),parameters.refphv(ip));
 	localcs.fft_dtps = localcs.dtps;
-	% normalize the amplitude
-%	normamp = localcs.amps(localcs.center_sta);
-	normamp = median(localcs.amps);
-	localcs.true_amps = localcs.amps;
-	for ista = 1:length(nbstaids)
-		localcs.amps(ista) = localcs.amps(ista)./normamp;
-	end
+	localcs.fft_amps = localcs.amps;
 
 	% find the CS measurements that contains the center station
 	for ics = 1:length(eventcs.CS)
@@ -78,6 +73,14 @@ for ie = 1:length(csmatfiles)
 	end % ics
 	if is_cs_dtp
 		localcs.dtps = localcs.cs_dtps;
+		localcs.amps = localcs.cs_amps;
+	end
+	% normalize the amplitude
+%	normamp = localcs.amps(localcs.center_sta);
+	normamp = median(localcs.amps);
+	localcs.amps = localcs.cs_amps;
+	for ista = 1:length(nbstaids)
+		localcs.amps(ista) = localcs.amps(ista)./normamp;
 	end
 	ind = find(localcs.isgood<0);
 	localcs.stlas(ind) = [];
@@ -87,7 +90,7 @@ for ie = 1:length(csmatfiles)
 	localcs.dtps(ind) = [];
 	localcs.cs_dtps(ind) = [];
 	localcs.cs_amps(ind) = [];
-	localcs.true_amps(ind) = [];
+	localcs.fft_amps(ind) = [];
 	localcs.fft_dtps(ind) = [];
 	localcs.isgood(ind) = [];
 	localcs.cohere(ind) = [];
@@ -101,7 +104,7 @@ for ie = 1:length(csmatfiles)
 	localcs.amps = localcs.amps(:);
 	localcs.dtps = localcs.dtps(:);
 	localcs.dists = localcs.dists(:);
-	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),localcs.OPW_v);
+%	localcs.dtps = corr_cycle_skip(ddists,localcs.dtps,periods(ip),localcs.OPW_v);
 	localcs.amp_diff = max(localcs.amps)./min(localcs.amps);
 	localcs.Wph = Wph;
 	event_data(ie) = localcs;

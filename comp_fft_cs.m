@@ -8,7 +8,7 @@ load pa5mod
 
 is_cs_dtp = 1;
 Wph = 30;
-iprange = [2:6];
+iprange = [2:4];
 
 for ip=iprange
 
